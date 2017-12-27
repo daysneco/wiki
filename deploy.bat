@@ -4,9 +4,7 @@ goto deploy
 
 :init
 mkdir output
-cd output
-git clone -b gh-pages git@github.com:daysneco/wiki.git
-cd ..
+git clone -b gh-pages git@github.com:daysneco/wiki.git output
 goto end
 
 :deploy
