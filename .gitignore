@@ -1,1 +1,13 @@
+*.swp
+*.bak
+*.py[cd]
 output
+.DS_Store
+.ipynb_checkpoints/
+*.o
+*.proj
+*.iml
+.idea/
+*.gz
+*.data
+logs/

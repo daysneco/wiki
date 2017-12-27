@@ -2,10 +2,10 @@
 # http://simiki.org/docs/configuration.html
 
 url: 
-title: personal knowledge wiki
+title: Norris
 keywords: technology
-description: A wiki website of daysneco
-author: daysneco
+description: A wiki website of Norris
+author: Norris
 
 root: /wiki
 
@@ -14,4 +14,4 @@ deploy:
       remote: origin
       branch: gh-pages
       
-theme: simple2
+theme: simple
