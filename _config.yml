@@ -2,7 +2,16 @@
 # http://simiki.org/docs/configuration.html
 
 url: 
-title: 
-keywords: 
-description: 
-author: 
+title: personal knowledge wiki
+keywords: technology
+description: A wiki website of daysneco
+author: daysneco
+
+root: /wiki
+
+deploy:
+    - type: git
+      remote: origin
+      branch: gh-pages
+      
+theme: simple2
