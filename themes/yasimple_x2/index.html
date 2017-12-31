@@ -3,38 +3,43 @@
 {%- block title %}{{ site.title }}{% endblock %}
 
 {%- block container %}
-<div class="title">{{ site.title }}</div>
+  <div id="header">
+    <a href="{{ site.root }}/">{{ site.title }}</a>
+  </div>
 
-<div class="index">
-  {%- if site.index %}  {# custom index page #}
+  {# Custom index page #}
+  {%- if site.index %}
     {{ page.content }}
-  {%- else %}  {# auto generate index page #}
+  {%- else %}
+  <div class="category_item">
     {%- for category in pages %}
-      {%- if site.default_ext not in category %}  {# is category #}
+      {# Only list second-level directory #}
+      {%- if site.default_ext not in category %}
     <div class="category">
-      <h2 id="{{ category.name }}">
-        {%- if 'label' in category %}{{ category.label }}
-        {%- else %}{{ category.name|capitalize }}{% endif %}
-      </h2>
-      <div class="category_pages">
+      <div class="category_name">
+        <h2 id="{{ category.name }}">
+          {%- if 'label' in category %}{{ category.label }}
+          {%- else %}{{ category.name|capitalize }}{% endif %}
+        </h2>
+      </div>
+      <div class="category_list">
         <ul>
           {%- for page in category.pages %}
-            {%- if site.default_ext in page.fname %}  {# is page #}
+            {%- if site.default_ext in page.fname %}
           <li class="pagelist item_arrow">
               <a href="./{{ category.name }}/{{ page.name }}.html">{{ page.title }}</a>
               {%- if 'description' in page %}
-              &nbsp;&nbsp;&nbsp;{{ page.description }}
+              <span class="page_description">&nbsp;&nbsp;#&nbsp;{{ page.description }}</span>
               {% endif %}
-            {%- elif 'pages' in page %}  {# is collection #}
+            {%- elif 'pages' in page %}  {# for collection #}
           <li class="pagelist">
-              {% set coll = page %}  {# for readability #}
               <div class="list_wrapper">
-                <div class="coll_name item_arrow">{{ coll.name }}&nbsp;&#58;&nbsp;</div>
+                <div class="coll_name item_arrow">&#91;{{ page.name }}&#93;&nbsp;&#58;&nbsp;</div>
                 <div class="coll_list">
-              {%- for coll_page in coll.pages %}
+              {%- for coll_page in page.pages %}
                   <a href="./{{ category.name }}/{{ coll_page.name }}.html">{{ coll_page.title }}</a>
                 {%- if 'description' in coll_page %}
-                  &nbsp;{{ coll_page.description }}
+                  <span class="page_description">&nbsp;{{ coll_page.description }}</span>
                 {% endif %}
                 {%- if not loop.last %}&nbsp;&#47;&nbsp;{% endif %}
               {%- endfor %}
@@ -44,13 +49,13 @@
           </li>
           {%- endfor %}
         </ul>
-      </div> <!-- end category_pages -->
+      </div> <!-- end category_list -->
     </div> <!-- end category -->
       {%- endif %}
     <div class="clearfix"></div>
     {%- endfor %}
+  </div> <!-- end category_item -->
   {%- endif %}
-</div>
 {%- endblock %}
 
 {%- block script %}
