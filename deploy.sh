@@ -1,7 +1,7 @@
 if [ $1 = -i ]
 then
     mkdir output
-    git clone -b gh-pages git@github.com:daysneco.git output
+    git clone -b gh-pages git@github.com:daysneco/wiki.git output
     exit 0
 elif [ $1 =  ]
 then
