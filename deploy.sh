@@ -5,9 +5,14 @@ then
     exit 0
 elif [ $1 =  ]
 then
-    echo deploy [Option]
-    echo        -i 初始化
-    echo        message  提交到github并发布，提交信息为mesage
+#    echo deploy [Option]
+#    echo        -i 初始化
+#    echo        message  提交到github并发布，提交信息为mesage
+#    exit 0
+    git pull origin master
+    cd output
+    git pull origin gh-pages
+    cd ..
     exit 0
 else
     git add . --all

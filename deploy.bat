@@ -1,10 +1,17 @@
 if "%1"=="-i"  goto init
-if "%1"=="" goto end
+if "%1"=="" goto update
 goto deploy
 
 :init
 mkdir output
 git clone -b gh-pages git@github.com:daysneco/wiki.git output
+goto end
+
+:update
+git pull origin master
+cd output
+git pull origin gh-pages
+cd ..
 goto end
 
 :deploy
