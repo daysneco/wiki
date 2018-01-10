@@ -5,26 +5,26 @@ date: 2018-01-08 17:51
 
 [TOC]
 
-### 总体设计
+## 总体设计
 
 ![](/wiki/static/images/UICC_architecture.png)
 
 从图中可以看出，处理整个UICC的入口是在UiccController中。相当于Telephony中UICC的管家。
 
-### 初始化流程
+## 初始化流程
 
 ![](/wiki/static/images/UiccController_init.png)
 
-### UiccController
+## UiccController
 
 UiccController的创建过程可以参考上图初始化流程，通过make方法初始化，注意只创建了**一个**UiccController对象。
 
-#### UiccController的功能
+### UiccController的功能
 
 - 创建并提供`UiccCard`、`IccRecords`、`IccFileHandler`和`UiccCardApplication`对象
 - 提供对sim卡状态的监听
 
-#### UiccController更新机制
+### UiccController更新机制
 
 ```java
 mCis[i].registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, index);
@@ -37,7 +37,7 @@ mCis[i].registerForIccRefresh(this, EVENT_SIM_REFRESH, index);
 
 这4个监听器都是在RIL的父类BaseCommands中实现的。
 
-##### registerForIccStatusChanged
+#### registerForIccStatusChanged
 
 ```java
 public void registerForIccStatusChanged(Handler h, int what, Object obj) {
@@ -96,7 +96,7 @@ protected RILRequest processResponse(RadioResponseInfo responseInfo) {
 }
 ```
 
-##### registerForAvailable
+#### registerForAvailable
 
 ```java
 public void registerForAvailable(Handler h, int what, Object obj) {
@@ -130,7 +130,7 @@ protected void setRadioState(RadioState newState) {
 }
 ```
 
-##### registerForNotAvailable
+#### registerForNotAvailable
 
 ```java
 public void registerForNotAvailable(Handler h, int what, Object obj) {
@@ -148,7 +148,7 @@ public void registerForNotAvailable(Handler h, int what, Object obj) {
 
 1、和registerForAvailable监听器一样也是在设置Radio状态跟之前不同时触发。
 
-##### registerForIccRefresh
+#### registerForIccRefresh
 
 ```java
 public void registerForIccRefresh(Handler h, int what, Object obj) {
@@ -168,7 +168,7 @@ public void simRefresh(int indicationType, SimRefreshResult refreshResult) {
 }
 ```
 
-#### UiccController对监听事件的处理
+### UiccController对监听事件的处理
 
 UiccController注册了4个监听器，但是只使用了3个Message消息，其中前两个使用了相同的Message。通过在开机LOG中搜索下面的LOG，我们可以确认，开机之后首先触发的是registerForAvailable监听器。
 
@@ -186,9 +186,9 @@ switch (msg.what) {
         break;
 ```
 
-### UiccCard
+## UiccCard
 
-#### UiccCard功能
+### UiccCard功能
 
 - 创建UiccCardApplication和CatService对象
 - 提供访问UiccCardApplication对象的接口
@@ -196,41 +196,41 @@ switch (msg.what) {
 - 提供运营商规则状态接口
 - 提供运营商规则改变监听器
 
-#### UiccCard更新机制
+### UiccCard更新机制
 
 `UiccCard`更新是依赖于`UiccController` 的，当`UiccController`中的监听器监听到事件改变时，和开机初始化一样，会主动去获取sim卡状态，然后进行更新`UiccCard`。
 
-### UiccCardApplication
+## UiccCardApplication
 
-#### UiccCardApplication作用
+### UiccCardApplication作用
 
 - 创建并提供`IccRecords`、`IccFileHandler`对象
 - 提供当前`UiccCardApplication`的状态、类型等信息
 - 提供3个监听器，分别用于监听pin锁、网络锁和sim卡状态是否就绪
 
-#### UiccCardApplication更新机制
+### UiccCardApplication更新机制
 
 - `UiccCardApplication`更新机制和`UiccCard`类似，在`UiccCard`更新时，调用U`iccCardApplication`更新方法进行更新。
 - `UiccCardApplication`注册监听了Radio unavailable事件，当接收到这个事件之后更改sim卡状态为unknown。
 
-### IccFileHandler
+## IccFileHandler
 
 `IccFileHandler`根据不同类型的sim卡有5个子类，目前市场上占有量最大的是USIM。`UiccCardApplication`根据卡的类型会创建`IccFileHandler`相应的子类。
 
-#### IccFileHandler功能
+### IccFileHandler功能
 
 IccFileHandler主要提供访问sim卡中EF文件的一些接口。
 
-### IccRecords
+## IccRecords
 
 `IccRecords`也有3个子类，和`IccFileHandler`类似，`UiccCardApplication`也根据不同sim卡的类型创建不同的`IccRecords`的子类。
 
-#### IccRecords作用
+### IccRecords作用
 
 - 提供sim卡相关信息的查询，如IMSI、ICCID等
 - 提供了5个sim卡相关的监听器
 
-#### IccRecords更新机制
+### IccRecords更新机制
 
 这里以`IccRecords`的子类`SIMRecords`为例进行介绍。
 
