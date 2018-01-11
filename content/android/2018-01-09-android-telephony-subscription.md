@@ -6,7 +6,7 @@ date: 2018-01-09 14:14
 
 [TOC]
 
-### sim卡初始化流程
+## sim卡初始化流程
 
 ![](/wiki/static/images/sim_card_init.png)
 
@@ -14,9 +14,9 @@ date: 2018-01-09 14:14
 
 > telephony.db   data/user_de/0/com.android.providers.telephony/databases  
 
-### SubscriptionInfoUpdater
+## SubscriptionInfoUpdater
 
-#### 初始化
+### 初始化
 
 ```java
 @PhoneFactory.java
@@ -40,7 +40,7 @@ public SubscriptionInfoUpdater(
 - 构造函数中主要是注册了一个广播监听器，接收`IccCardProxy`发来的广播。
 - 这里只创建了一个`SubscriptionInfoUpdater`对象，根据phoneId进行区分具体是哪一张卡。
 
-#### 添加到数据库
+### 添加到数据库
 
 如果手机插入了两张卡，会等两张卡都加载完之后，才回去添加到数据库。
 
@@ -163,7 +163,7 @@ public int addSubInfoRecord(String iccId, int slotIndex) {
 SubscriptionController.getInstance().notifySubscriptionInfoChanged();
 ```
 
-#### 继续更新
+### 继续更新
 
 再次回到`handleSimLoaded`方法中，接着进行处理。
 
@@ -174,6 +174,6 @@ SubscriptionController.getInstance().notifySubscriptionInfoChanged();
 - 更新com.android.phone_preferences.xml中subid
 - 发送广播**Intent.ACTION_SIM_STATE_CHANGED**
 
-### 总结
+## 总结
 
 这篇主要介绍了SIMRecords中加载完sim卡信息之后，把信息更新到数据库的过程。主要涉及到SubscriptionInfoUpdater、SubscriptionController、SubscriptionManager。
