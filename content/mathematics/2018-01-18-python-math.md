@@ -3,15 +3,16 @@ title: "常见的数学公式"
 date: 2018-01-18 16:47
 ---
 
+[TOC]
+
 ## 三角函数
 
 $$
-sin^2x + cos^2x = 1\\
-six(x + y) = sinxcosy + conxsiny\\
-cos(x + y) = cosxcosy - sinxsiny\\
-sinx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n+1}}{(2n+1)!} = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + ...\\
-cosx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n}}{(2n)!} = 1 - \frac{x^2}{2!} + \frac{x^4}{4!} - \frac{x^6}{6!}  +  ...\\
-e^{j\theta} = cos\theta + jsin\theta
+sin^2x + cos^2x = 1\\\\
+six(x + y) = sinxcosy + conxsiny\\\\
+cos(x + y) = cosxcosy - sinxsiny\\\\
+sinx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n+1}}{(2n+1)!} = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + ...\\\\
+cosx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n}}{(2n)!} = 1 - \frac{x^2}{2!} + \frac{x^4}{4!} - \frac{x^6}{6!}  +  ...
 $$
 
 ### 正弦信号合成方波信号
@@ -68,6 +69,33 @@ while xx < 10:
 ## 欧拉公式
 
 $$
-x = cos\omega_0t + jsin\omega_0t = e^{j\omega_0t}
+x = cos\, \omega_0t + jsin\, \omega_0t = e^{j\omega_0t}
 $$
+
+由欧拉公式可以推出：
+$$
+cos\,wt = \frac{e^{jwt} +e^{-jwt}}{2}\\\\
+sin\,wt = \frac{e^{jwt}-e^{-jwt}}{2j} = -\frac{j}{2}(e^{jwt}-e^{-jwt})
+$$
+
+## 傅里叶级数
+
+$$
+f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}_0t + b_ksin\,k{\omega}_0t)\\\\
+其中：\\\\
+
+\omega_0 = \frac{2{\pi}}{2}\\\\
+a_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)cos\,k{\omega}_0t\,dt (k = 0, 1, 2, ...)\\\\
+b_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)sin\,k{\omega}_0t\,dt (k = 1, 2, ...)
+$$
+
+周期函数$f(x)$可以分解为：
+
+- 直流分量$(\frac{a_0}{2})$
+- 余弦分量$(a_kcos\,k\omega_0t)$
+- 正弦分量$(b_ksin\,k\omega_0t)$
+
+### 复指数形式的傅里叶级数
+
+
 
