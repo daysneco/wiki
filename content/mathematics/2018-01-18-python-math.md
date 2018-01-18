@@ -81,15 +81,14 @@ $$
 ## 傅里叶级数
 
 $$
-f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}_0t + b_ksin\,k{\omega}_0t)\\\\
+f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}\_0t + b_ksin\,k{\omega}\_0t) \\\\
 其中：\\\\
-
 \omega_0 = \frac{2{\pi}}{2}\\\\
-a_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)cos\,k{\omega}_0t\,dt (k = 0, 1, 2, ...)\\\\
-b_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)sin\,k{\omega}_0t\,dt (k = 1, 2, ...)
+a_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)cos\,k{\omega}\_0t\,dt (k = 0, 1, 2, ...)\\\\
+b_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)sin\,k{\omega}\_0t\,dt (k = 1, 2, ...)
 $$
 
-周期函数$f(x)$可以分解为：
+周期函数$f(x)​$可以分解为：
 
 - 直流分量$(\frac{a_0}{2})$
 - 余弦分量$(a_kcos\,k\omega_0t)$
@@ -97,5 +96,31 @@ $$
 
 ### 复指数形式的傅里叶级数
 
+$$
+f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}\_{0}t + b_ksin\,k{\omega}\_0t)\\\\
+= \frac{a_0}{2} + \frac{1}{2}\sum\_{k=1}^{\infty}(a_k(e^{kj\omega_0t} + e^{-kj\omega_0t}) - jb_k(e^{kj\omega_0t} - e^{-kj\omega_0t}))\\\\
+= \frac{a_0}{2} + \frac{1}{2}\sum\_{k=1}^{\infty}[(a_k-jb_k)e^{kj\omega_0t} + (a_k + jb_k)e^{-kj\omega_0t})]\\\
+=\frac{a_0}{2} + \frac{1}{2}\sum_{k=1}^{\infty}[(a_k-jb_k)e^{kj\omega_0t}] + \frac{1}{2}\sum_{k=1}^{\infty} [(a_k + jb_k)e^{-kj\omega_0t})]\\\
+= \sum_{k=0}\frac{a_k}{2} + \sum_{k=1}^{\infty}[\frac{1}{2}(a_k - jb_k)e^{kj\omega_0t} + \sum_{k=-1}^{-\infty}[\frac{1}{2}(a_{-k} + jb_{-k})e^{kj\omega_0t}]\\\\
+= \sum_{-\infty}^{\infty}c_ke^{kj\omega_0t}
+$$
+
+因此：
+$$
+f(t) = \sum_{-\infty}^{\infty}c_ke^{kj\omega_0t}
+$$
+其中：
+$$
+c_k =
+  \begin{equation}
+  \left\{
+             \begin{array}{lr}
+             \frac{a_0}{2}, \quad k = 0  \\\\
+            \frac{1}{2}(a_k - jb_k), \quad k = 1, 2, ...  \\\\
+             \frac{1}{2}(a_{-k} + jb_{-k}), \quad k = -1, -2, ...   
+             \end{array}
+  \right.
+  \end{equation}
+$$
 
 
