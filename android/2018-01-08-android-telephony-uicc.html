@@ -1,0 +1,380 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/style.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/tango.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/normalize.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="shortcut icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <title>Telephony之UICC架构 - Norris</title>
+        <meta name="keywords" content="technology"/>
+        <meta name="description" content="A wiki website of Norris"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width" />
+        
+        <script type="text/javascript" 
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [['$(',')$'], ['\\(','\\)']]}
+            });
+        </script>
+
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+
+        <script>
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+          ga('create', 'UA-78529611-1', 'auto');
+          ga('send', 'pageview');
+
+        </script>
+    </head>
+
+    <body>
+        <div id="container">
+            
+<div id="header">
+  <div id="post-nav"><a href="/wiki/">Home</a>&nbsp;»&nbsp;<a href="/wiki/#android">android</a>&nbsp;»&nbsp;Telephony之UICC架构</div>
+</div>
+<div class="clearfix"></div>
+<div id="title">Telephony之UICC架构</div>
+<div id="content">
+  <div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#_1">总体设计</a></li>
+<li><a href="#_2">初始化流程</a></li>
+<li><a href="#uicccontroller">UiccController</a><ul>
+<li><a href="#uicccontroller_1">UiccController的功能</a></li>
+<li><a href="#uicccontroller_2">UiccController更新机制</a><ul>
+<li><a href="#registerforiccstatuschanged">registerForIccStatusChanged</a></li>
+<li><a href="#registerforavailable">registerForAvailable</a></li>
+<li><a href="#registerfornotavailable">registerForNotAvailable</a></li>
+<li><a href="#registerforiccrefresh">registerForIccRefresh</a></li>
+</ul>
+</li>
+<li><a href="#uicccontroller_3">UiccController对监听事件的处理</a></li>
+</ul>
+</li>
+<li><a href="#uicccard">UiccCard</a><ul>
+<li><a href="#uicccard_1">UiccCard功能</a></li>
+<li><a href="#uicccard_2">UiccCard更新机制</a></li>
+</ul>
+</li>
+<li><a href="#uicccardapplication">UiccCardApplication</a><ul>
+<li><a href="#uicccardapplication_1">UiccCardApplication作用</a></li>
+<li><a href="#uicccardapplication_2">UiccCardApplication更新机制</a></li>
+</ul>
+</li>
+<li><a href="#iccfilehandler">IccFileHandler</a><ul>
+<li><a href="#iccfilehandler_1">IccFileHandler功能</a></li>
+</ul>
+</li>
+<li><a href="#iccrecords">IccRecords</a><ul>
+<li><a href="#iccrecords_1">IccRecords作用</a></li>
+<li><a href="#iccrecords_2">IccRecords更新机制</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="_1">总体设计</h2>
+<p><img alt="" src="/wiki/static/images/UICC_architecture.png" /></p>
+<p>从图中可以看出，处理整个UICC的入口是在UiccController中。相当于Telephony中UICC的管家。</p>
+<h2 id="_2">初始化流程</h2>
+<p><img alt="" src="/wiki/static/images/UiccController_init.png" /></p>
+<h2 id="uicccontroller">UiccController</h2>
+<p>UiccController的创建过程可以参考上图初始化流程，通过make方法初始化，注意只创建了<strong>一个</strong>UiccController对象。</p>
+<h3 id="uicccontroller_1">UiccController的功能</h3>
+<ul>
+<li>创建并提供<code>UiccCard</code>、<code>IccRecords</code>、<code>IccFileHandler</code>和<code>UiccCardApplication</code>对象</li>
+<li>提供对sim卡状态的监听</li>
+</ul>
+<h3 id="uicccontroller_2">UiccController更新机制</h3>
+<div class="hlcode"><pre><span class="n">mCis</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">registerForIccStatusChanged</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_ICC_STATUS_CHANGED</span><span class="o">,</span> <span class="n">index</span><span class="o">);</span>
+<span class="n">mCis</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">registerForAvailable</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_ICC_STATUS_CHANGED</span><span class="o">,</span> <span class="n">index</span><span class="o">);</span>
+<span class="n">mCis</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">registerForNotAvailable</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_RADIO_UNAVAILABLE</span><span class="o">,</span> <span class="n">index</span><span class="o">);</span>
+<span class="n">mCis</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">registerForIccRefresh</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_SIM_REFRESH</span><span class="o">,</span> <span class="n">index</span><span class="o">);</span>
+</pre></div>
+
+
+<p><code>UiccController</code>构造函数中注册了4个监听器，依次看下这4个监听器要实现的功能。</p>
+<p>这4个监听器都是在RIL的父类BaseCommands中实现的。</p>
+<h4 id="registerforiccstatuschanged">registerForIccStatusChanged</h4>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerForIccStatusChanged</span><span class="o">(</span><span class="n">Handler</span> <span class="n">h</span><span class="o">,</span> <span class="kt">int</span> <span class="n">what</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Registrant</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Registrant</span> <span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">what</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+    <span class="n">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>1、当Modem主动上报sim卡状态改变时触发</p>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">simStatusChanged</span><span class="o">(</span><span class="kt">int</span> <span class="n">indicationType</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">mRil</span><span class="o">.</span><span class="na">processIndication</span><span class="o">(</span><span class="n">indicationType</span><span class="o">);</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">RIL</span><span class="o">.</span><span class="na">RILJ_LOGD</span><span class="o">)</span> <span class="n">mRil</span><span class="o">.</span><span class="na">unsljLog</span><span class="o">(</span><span class="n">RIL_UNSOL_RESPONSE_SIM_STATUS_CHANGED</span><span class="o">);</span>
+
+    <span class="n">mRil</span><span class="o">.</span><span class="na">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">();</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>2、处理sim卡PUK和PUK2码时触发</p>
+<div class="hlcode"><pre><span class="o">...</span>
+<span class="kd">protected</span> <span class="n">RILRequest</span> <span class="nf">processResponse</span><span class="o">(</span><span class="n">RadioResponseInfo</span> <span class="n">responseInfo</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">switch</span> <span class="o">(</span><span class="n">rr</span><span class="o">.</span><span class="na">mRequest</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nl">RIL_REQUEST_ENTER_SIM_PUK:</span>
+        <span class="k">case</span> <span class="nl">RIL_REQUEST_ENTER_SIM_PUK2:</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mIccStatusChangedRegistrants</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">RILJ_LOGD</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">riljLog</span><span class="o">(</span><span class="s">&quot;ON enter sim puk fakeSimStatusChanged: reg count=&quot;</span>
+                            <span class="o">+</span> <span class="n">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+                <span class="o">}</span>
+                <span class="n">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">();</span>
+            <span class="o">}</span>
+            <span class="k">break</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">RadioError</span><span class="o">.</span><span class="na">NONE</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">rr</span><span class="o">.</span><span class="na">mRequest</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">RIL_REQUEST_ENTER_SIM_PIN:</span>
+            <span class="k">case</span> <span class="nl">RIL_REQUEST_ENTER_SIM_PIN2:</span>
+            <span class="k">case</span> <span class="nl">RIL_REQUEST_CHANGE_SIM_PIN:</span>
+            <span class="k">case</span> <span class="nl">RIL_REQUEST_CHANGE_SIM_PIN2:</span>
+            <span class="k">case</span> <span class="nl">RIL_REQUEST_SET_FACILITY_LOCK:</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">mIccStatusChangedRegistrants</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">RILJ_LOGD</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">riljLog</span><span class="o">(</span><span class="s">&quot;ON some errors fakeSimStatusChanged: reg count=&quot;</span>
+                                <span class="o">+</span> <span class="n">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+                    <span class="o">}</span>
+                    <span class="n">mIccStatusChangedRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">();</span>
+                <span class="o">}</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h4 id="registerforavailable">registerForAvailable</h4>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerForAvailable</span><span class="o">(</span><span class="n">Handler</span> <span class="n">h</span><span class="o">,</span> <span class="kt">int</span> <span class="n">what</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Registrant</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Registrant</span> <span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">what</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mStateMonitor</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mAvailRegistrants</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">r</span><span class="o">.</span><span class="na">notifyRegistrant</span><span class="o">(</span><span class="k">new</span> <span class="n">AsyncResult</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">));</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>1、当设置Radio状态跟之前状态不同时触发</p>
+<div class="hlcode"><pre><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">setRadioState</span><span class="o">(</span><span class="n">RadioState</span> <span class="n">newState</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">RadioState</span> <span class="n">oldState</span><span class="o">;</span>
+
+        <span class="o">...</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">mState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">oldState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">mAvailRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">();</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(!</span><span class="n">mState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">oldState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">mNotAvailRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="o">...</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h4 id="registerfornotavailable">registerForNotAvailable</h4>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerForNotAvailable</span><span class="o">(</span><span class="n">Handler</span> <span class="n">h</span><span class="o">,</span> <span class="kt">int</span> <span class="n">what</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Registrant</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Registrant</span> <span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">what</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mStateMonitor</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mNotAvailRegistrants</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+
+        <span class="k">if</span> <span class="o">(!</span><span class="n">mState</span><span class="o">.</span><span class="na">isAvailable</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">r</span><span class="o">.</span><span class="na">notifyRegistrant</span><span class="o">(</span><span class="k">new</span> <span class="n">AsyncResult</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">));</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>1、和registerForAvailable监听器一样也是在设置Radio状态跟之前不同时触发。</p>
+<h4 id="registerforiccrefresh">registerForIccRefresh</h4>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerForIccRefresh</span><span class="o">(</span><span class="n">Handler</span> <span class="n">h</span><span class="o">,</span> <span class="kt">int</span> <span class="n">what</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Registrant</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Registrant</span> <span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">what</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+    <span class="n">mIccRefreshRegistrants</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>1、当modem上报sim卡refresh时触发</p>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">simRefresh</span><span class="o">(</span><span class="kt">int</span> <span class="n">indicationType</span><span class="o">,</span> <span class="n">SimRefreshResult</span> <span class="n">refreshResult</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">...</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">RIL</span><span class="o">.</span><span class="na">RILJ_LOGD</span><span class="o">)</span> <span class="n">mRil</span><span class="o">.</span><span class="na">unsljLogRet</span><span class="o">(</span><span class="n">RIL_UNSOL_SIM_REFRESH</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+    <span class="n">mRil</span><span class="o">.</span><span class="na">mIccRefreshRegistrants</span><span class="o">.</span><span class="na">notifyRegistrants</span><span class="o">(</span><span class="k">new</span> <span class="n">AsyncResult</span> <span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="n">response</span><span class="o">,</span> <span class="kc">null</span><span class="o">));</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h3 id="uicccontroller_3">UiccController对监听事件的处理</h3>
+<p>UiccController注册了4个监听器，但是只使用了3个Message消息，其中前两个使用了相同的Message。通过在开机LOG中搜索下面的LOG，我们可以确认，开机之后首先触发的是registerForAvailable监听器。</p>
+<div class="hlcode"><pre><span class="n">UNSOL_RESPONSE_SIM_STATUS_CHANGED</span><span class="o">|</span><span class="n">UNSOL_RESPONSE_RADIO_STATE_CHANGED</span><span class="o">|</span><span class="n">UNSOL_SIM_REFRESH</span>
+</pre></div>
+
+
+<p><code>EVENT_ICC_STATUS_CHANGED</code>的处理内容很简单，就是去主动获取sim卡的状态。然后接下来的流程就和初始化流程相对应，依次去初始化其它相关的类。</p>
+<div class="hlcode"><pre><span class="k">switch</span> <span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nl">EVENT_ICC_STATUS_CHANGED:</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">log</span><span class="o">(</span><span class="s">&quot;Received EVENT_ICC_STATUS_CHANGED, calling getIccCardStatus&quot;</span><span class="o">);</span>
+        <span class="n">mCis</span><span class="o">[</span><span class="n">index</span><span class="o">].</span><span class="na">getIccCardStatus</span><span class="o">(</span><span class="n">obtainMessage</span><span class="o">(</span><span class="n">EVENT_GET_ICC_STATUS_DONE</span><span class="o">,</span> <span class="n">index</span><span class="o">));</span>
+        <span class="k">break</span><span class="o">;</span>
+</pre></div>
+
+
+<h2 id="uicccard">UiccCard</h2>
+<h3 id="uicccard_1">UiccCard功能</h3>
+<ul>
+<li>创建UiccCardApplication和CatService对象</li>
+<li>提供访问UiccCardApplication对象的接口</li>
+<li>提供sim卡移除的监听器</li>
+<li>提供运营商规则状态接口</li>
+<li>提供运营商规则改变监听器</li>
+</ul>
+<h3 id="uicccard_2">UiccCard更新机制</h3>
+<p><code>UiccCard</code>更新是依赖于<code>UiccController</code> 的，当<code>UiccController</code>中的监听器监听到事件改变时，和开机初始化一样，会主动去获取sim卡状态，然后进行更新<code>UiccCard</code>。</p>
+<h2 id="uicccardapplication">UiccCardApplication</h2>
+<h3 id="uicccardapplication_1">UiccCardApplication作用</h3>
+<ul>
+<li>创建并提供<code>IccRecords</code>、<code>IccFileHandler</code>对象</li>
+<li>提供当前<code>UiccCardApplication</code>的状态、类型等信息</li>
+<li>提供3个监听器，分别用于监听pin锁、网络锁和sim卡状态是否就绪</li>
+</ul>
+<h3 id="uicccardapplication_2">UiccCardApplication更新机制</h3>
+<ul>
+<li><code>UiccCardApplication</code>更新机制和<code>UiccCard</code>类似，在<code>UiccCard</code>更新时，调用U<code>iccCardApplication</code>更新方法进行更新。</li>
+<li><code>UiccCardApplication</code>注册监听了Radio unavailable事件，当接收到这个事件之后更改sim卡状态为unknown。</li>
+</ul>
+<h2 id="iccfilehandler">IccFileHandler</h2>
+<p><code>IccFileHandler</code>根据不同类型的sim卡有5个子类，目前市场上占有量最大的是USIM。<code>UiccCardApplication</code>根据卡的类型会创建<code>IccFileHandler</code>相应的子类。</p>
+<h3 id="iccfilehandler_1">IccFileHandler功能</h3>
+<p>IccFileHandler主要提供访问sim卡中EF文件的一些接口。</p>
+<h2 id="iccrecords">IccRecords</h2>
+<p><code>IccRecords</code>也有3个子类，和<code>IccFileHandler</code>类似，<code>UiccCardApplication</code>也根据不同sim卡的类型创建不同的<code>IccRecords</code>的子类。</p>
+<h3 id="iccrecords_1">IccRecords作用</h3>
+<ul>
+<li>提供sim卡相关信息的查询，如IMSI、ICCID等</li>
+<li>提供了5个sim卡相关的监听器</li>
+</ul>
+<h3 id="iccrecords_2">IccRecords更新机制</h3>
+<p>这里以<code>IccRecords</code>的子类<code>SIMRecords</code>为例进行介绍。</p>
+<div class="hlcode"><pre><span class="n">mParentApp</span><span class="o">.</span><span class="na">registerForReady</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_APP_READY</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+<span class="n">mParentApp</span><span class="o">.</span><span class="na">registerForLocked</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">EVENT_APP_LOCKED</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">log</span><span class="o">(</span><span class="s">&quot;SIMRecords X ctor this=&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="o">);</span>
+
+<span class="n">IntentFilter</span> <span class="n">intentfilter</span> <span class="o">=</span> <span class="k">new</span> <span class="n">IntentFilter</span><span class="o">();</span>
+<span class="n">intentfilter</span><span class="o">.</span><span class="na">addAction</span><span class="o">(</span><span class="n">CarrierConfigManager</span><span class="o">.</span><span class="na">ACTION_CARRIER_CONFIG_CHANGED</span><span class="o">);</span>
+</pre></div>
+
+
+<p><code>SIMRecords</code>初始化时注册了两个监听器和一个广播，比较常见的是第一个监听器，这个就是<code>UiccCardApplication</code>中定义的监听器。</p>
+<div class="hlcode"><pre><span class="nd">@UiccCardApplication.java</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerForReady</span><span class="o">(</span><span class="n">Handler</span> <span class="n">h</span><span class="o">,</span> <span class="kt">int</span> <span class="n">what</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mLock</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">Registrant</span> <span class="n">r</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Registrant</span> <span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">what</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+        <span class="n">mReadyRegistrants</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+        <span class="n">notifyReadyRegistrantsIfNeeded</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>从这里可以看到注册监听器之后，马上回去判断是否通知。根据前面的流程可以判断，这里是满足条件的，所以接下来就是在<code>handleMessage</code>中进行处理。</p>
+<div class="hlcode"><pre><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">fetchSimRecords</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">mRecordsRequested</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">log</span><span class="o">(</span><span class="s">&quot;fetchSimRecords &quot;</span> <span class="o">+</span> <span class="n">mRecordsToLoad</span><span class="o">);</span>
+
+    <span class="n">mCi</span><span class="o">.</span><span class="na">getIMSIForApp</span><span class="o">(</span><span class="n">mParentApp</span><span class="o">.</span><span class="na">getAid</span><span class="o">(),</span> <span class="n">obtainMessage</span><span class="o">(</span><span class="n">EVENT_GET_IMSI_DONE</span><span class="o">));</span>
+    <span class="n">mRecordsToLoad</span><span class="o">++;</span>
+
+    <span class="n">mFh</span><span class="o">.</span><span class="na">loadEFTransparent</span><span class="o">(</span><span class="n">EF_ICCID</span><span class="o">,</span> <span class="n">obtainMessage</span><span class="o">(</span><span class="n">EVENT_GET_ICCID_DONE</span><span class="o">));</span>
+    <span class="n">mRecordsToLoad</span><span class="o">++;</span>
+
+    <span class="o">...</span>
+    <span class="n">loadEfLiAndEfPl</span><span class="o">();</span>
+    <span class="n">mFh</span><span class="o">.</span><span class="na">getEFLinearRecordSize</span><span class="o">(</span><span class="n">EF_SMS</span><span class="o">,</span> <span class="n">obtainMessage</span><span class="o">(</span><span class="n">EVENT_GET_SMS_RECORD_SIZE_DONE</span><span class="o">));</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">log</span><span class="o">(</span><span class="s">&quot;fetchSimRecords &quot;</span> <span class="o">+</span> <span class="n">mRecordsToLoad</span> <span class="o">+</span> <span class="s">&quot; requested: &quot;</span> <span class="o">+</span> <span class="n">mRecordsRequested</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<ul>
+<li>SIMRecords的更新过程就是使用IccFileHandler将一些sim卡信息读取并保存起来。</li>
+<li>当所有信息读取完之后，调用<code>onAllRecordsLoaded</code>方法，把sim卡的一些信息保存到数据库中</li>
+</ul>
+</div>
+<div id="content-footer">created in <span class="create-date date"> 2018-01-08 17:51 </span></div>
+<div id="comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script type="text/javascript">
+const gitment = new Gitment({
+  id: location.pathname,
+  title: 'Telephony之UICC架构',
+  owner: 'tracholar',
+  repo: 'wiki',
+  oauth: {
+    client_id: '0cc0476e504b5e70ae7c',
+    client_secret: 'ab98e39ef79469040057eba9c6b2b543b84c72ee',
+  },
+  // ...
+  // For more available options, check out the documentation below
+})
+
+gitment.render('comments')
+// or
+// gitment.render(document.getElementById('comments'))
+// or
+// document.body.appendChild(gitment.render())
+</script>
+
+        </div>
+        <div id="footer">
+            <span>
+                Copyright © 2018 Norris.
+                Powered by <a href="http://simiki.org/" target="_blank">Simiki</a>.
+                Fork me in <a href="https://github.com/daysneco/wiki" target="_blank"> github </a>.
+            </span>
+        </div>
+        
+
+        <script>
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?df74779713027375e7b79302fb72d7b0";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+        </script>
+
+
+        <script src="/wiki/tipuesearch_content.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch_set.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch.min.js"></script>
+    </body>
+</html>

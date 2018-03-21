@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/style.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/tango.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/normalize.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="shortcut icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <title>Telephony之subscription介绍 - Norris</title>
+        <meta name="keywords" content="technology"/>
+        <meta name="description" content="A wiki website of Norris"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width" />
+        
+        <script type="text/javascript" 
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [['$(',')$'], ['\\(','\\)']]}
+            });
+        </script>
+
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+
+        <script>
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+          ga('create', 'UA-78529611-1', 'auto');
+          ga('send', 'pageview');
+
+        </script>
+    </head>
+
+    <body>
+        <div id="container">
+            
+<div id="header">
+  <div id="post-nav"><a href="/wiki/">Home</a>&nbsp;»&nbsp;<a href="/wiki/#android">android</a>&nbsp;»&nbsp;Telephony之subscription介绍</div>
+</div>
+<div class="clearfix"></div>
+<div id="title">Telephony之subscription介绍</div>
+<div id="content">
+  <div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#sim">sim卡初始化流程</a></li>
+<li><a href="#subscriptioninfoupdater">SubscriptionInfoUpdater</a><ul>
+<li><a href="#_1">初始化</a></li>
+<li><a href="#_2">添加到数据库</a></li>
+<li><a href="#_3">继续更新</a></li>
+</ul>
+</li>
+<li><a href="#_4">总结</a></li>
+</ul>
+</div>
+<h2 id="sim">sim卡初始化流程</h2>
+<p><img alt="" src="/wiki/static/images/sim_card_init.png" /></p>
+<p>整体流程是在<code>SIMRecords</code>加载完所有的文件之后，通知<code>IccCardProxy</code>把sim卡相关的信息更新到数据库（telephony.db）中，并且完成slotid、subid、phoneid的映射。</p>
+<blockquote>
+<p>telephony.db   data/user_de/0/com.android.providers.telephony/databases  </p>
+</blockquote>
+<h2 id="subscriptioninfoupdater">SubscriptionInfoUpdater</h2>
+<h3 id="_1">初始化</h3>
+<div class="hlcode"><pre><span class="nd">@PhoneFactory.java</span>
+<span class="n">sSubInfoRecordUpdater</span> <span class="o">=</span> <span class="n">telephonyComponentFactory</span><span class="o">.</span><span class="na">makeSubscriptionInfoUpdater</span><span class="o">(</span>
+        <span class="n">BackgroundThread</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">getLooper</span><span class="o">(),</span> <span class="n">context</span><span class="o">,</span> <span class="n">sPhones</span><span class="o">,</span> <span class="n">sCommandsInterfaces</span><span class="o">);</span>
+</pre></div>
+
+
+<ul>
+<li>Phone进程初始化时在<code>PhoneFactory</code>中创建。</li>
+</ul>
+<div class="hlcode"><pre><span class="kd">public</span> <span class="nf">SubscriptionInfoUpdater</span><span class="o">(</span>
+        <span class="n">Looper</span> <span class="n">looper</span><span class="o">,</span> <span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">Phone</span><span class="o">[]</span> <span class="n">phone</span><span class="o">,</span> <span class="n">CommandsInterface</span><span class="o">[]</span> <span class="n">ci</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">looper</span><span class="o">);</span>
+    <span class="o">...</span>
+    <span class="n">IntentFilter</span> <span class="n">intentFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="n">IntentFilter</span><span class="o">(</span><span class="n">TelephonyIntents</span><span class="o">.</span><span class="na">ACTION_SIM_STATE_CHANGED</span><span class="o">);</span>
+    <span class="n">intentFilter</span><span class="o">.</span><span class="na">addAction</span><span class="o">(</span><span class="n">IccCardProxy</span><span class="o">.</span><span class="na">ACTION_INTERNAL_SIM_STATE_CHANGED</span><span class="o">);</span>
+    <span class="n">mContext</span><span class="o">.</span><span class="na">registerReceiver</span><span class="o">(</span><span class="n">sReceiver</span><span class="o">,</span> <span class="n">intentFilter</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<ul>
+<li>构造函数中主要是注册了一个广播监听器，接收<code>IccCardProxy</code>发来的广播。</li>
+<li>这里只创建了一个<code>SubscriptionInfoUpdater</code>对象，根据phoneId进行区分具体是哪一张卡。</li>
+</ul>
+<h3 id="_2">添加到数据库</h3>
+<p>如果手机插入了两张卡，会等两张卡都加载完之后，才回去添加到数据库。</p>
+<div class="hlcode"><pre><span class="nd">@SubscriptionInfoUpdater.java</span>
+<span class="kd">synchronized</span> <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">updateSubscriptionInfoByIccId</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">...</span>
+    <span class="n">ContentResolver</span> <span class="n">contentResolver</span> <span class="o">=</span> <span class="n">mContext</span><span class="o">.</span><span class="na">getContentResolver</span><span class="o">();</span>
+    <span class="n">String</span><span class="o">[]</span> <span class="n">oldIccId</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[</span><span class="n">PROJECT_SIM_NUM</span><span class="o">];</span>
+    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">PROJECT_SIM_NUM</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+        <span class="n">oldIccId</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">SubscriptionInfo</span><span class="o">&gt;</span> <span class="n">oldSubInfo</span> <span class="o">=</span>
+                <span class="n">SubscriptionController</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">getSubInfoUsingSlotIndexWithCheck</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span>
+                <span class="n">mContext</span><span class="o">.</span><span class="na">getOpPackageName</span><span class="o">());</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">oldSubInfo</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">oldSubInfo</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">oldIccId</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">oldSubInfo</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">getIccId</span><span class="o">();</span>
+            <span class="n">logd</span><span class="o">(</span><span class="s">&quot;updateSubscriptionInfoByIccId: oldSubId = &quot;</span>
+                    <span class="o">+</span> <span class="n">oldSubInfo</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">getSubscriptionId</span><span class="o">());</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="n">SIM_NOT_CHANGE</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">mIccId</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">equals</span><span class="o">(</span><span class="n">oldIccId</span><span class="o">[</span><span class="n">i</span><span class="o">]))</span> <span class="o">{</span>
+                <span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">SIM_CHANGED</span><span class="o">;</span>
+            <span class="o">}</span>   
+            <span class="k">if</span> <span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">SIM_NOT_CHANGE</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">ContentValues</span> <span class="n">value</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContentValues</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+                <span class="n">value</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">SIM_SLOT_INDEX</span><span class="o">,</span>
+                        <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">INVALID_SIM_SLOT_INDEX</span><span class="o">);</span>
+                <span class="n">contentResolver</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">CONTENT_URI</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span>
+                        <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">UNIQUE_KEY_SUBSCRIPTION_ID</span> <span class="o">+</span> <span class="s">&quot;=&quot;</span>
+                        <span class="o">+</span> <span class="n">Integer</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">oldSubInfo</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">getSubscriptionId</span><span class="o">()),</span> <span class="kc">null</span><span class="o">);</span>
+
+                <span class="c1">// refresh Cached Active Subscription Info List</span>
+                <span class="n">SubscriptionController</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">refreshCachedActiveSubscriptionInfoList</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="n">SIM_NOT_CHANGE</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// no SIM inserted last time, but there is one SIM inserted now</span>
+                <span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">SIM_CHANGED</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="n">oldIccId</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">ICCID_STRING_FOR_NO_SIM</span><span class="o">;</span>
+            <span class="n">logd</span><span class="o">(</span><span class="s">&quot;updateSubscriptionInfoByIccId: No SIM in slot &quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot; last time&quot;</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="o">...</span>
+    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">PROJECT_SIM_NUM</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="n">SIM_NOT_INSERT</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logd</span><span class="o">(</span><span class="s">&quot;updateSubscriptionInfoByIccId: No SIM inserted in slot &quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot; this time&quot;</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">//some special SIMs may have the same IccIds, add suffix to distinguish them</span>
+                <span class="c1">//FIXME: addSubInfoRecord can return an error.</span>
+                <span class="n">mSubscriptionManager</span><span class="o">.</span><span class="na">addSubscriptionInfoRecord</span><span class="o">(</span><span class="n">mIccId</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+                        <span class="o">+</span> <span class="n">Integer</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">mInsertSimState</span><span class="o">[</span><span class="n">i</span><span class="o">]),</span> <span class="n">i</span><span class="o">);</span>
+                <span class="n">logd</span><span class="o">(</span><span class="s">&quot;SUB&quot;</span> <span class="o">+</span> <span class="o">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">+</span> <span class="s">&quot; has invalid IccId&quot;</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="cm">/*if (sInsertSimState[i] != SIM_NOT_INSERT)*/</span> <span class="o">{</span>
+                <span class="n">mSubscriptionManager</span><span class="o">.</span><span class="na">addSubscriptionInfoRecord</span><span class="o">(</span><span class="n">mIccId</span><span class="o">[</span><span class="n">i</span><span class="o">],</span> <span class="n">i</span><span class="o">);</span>
+            <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>   
+</pre></div>
+
+
+<ul>
+<li>循环处理两张卡</li>
+<li>首先根据<code>sim_id</code>字段查询数据库，看看是否已经存在了信息。</li>
+<li>如果存在就更新数据库。</li>
+<li>如果不存在就调用到<code>addSubscriptionInfoRecord</code>中进行处理。</li>
+</ul>
+<p>接下来看针对slot_id不存在的卡处理，这种情况发生在之前数据库中没有信息，或者有一条信息，这次插入了两张卡的情况。也就说下面三种情况会到这里来：</p>
+<ul>
+<li>之前没卡，这次插入1张卡。</li>
+<li>之前没卡，这次插入2张卡。</li>
+<li>之前有1张卡， 这次插入2张卡。</li>
+</ul>
+<div class="hlcode"><pre><span class="nd">@SubscriptionController.java</span>
+<span class="kd">public</span> <span class="kt">int</span> <span class="nf">addSubInfoRecord</span><span class="o">(</span><span class="n">String</span> <span class="n">iccId</span><span class="o">,</span> <span class="kt">int</span> <span class="n">slotIndex</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">iccId</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">logdl</span><span class="o">(</span><span class="s">&quot;[addSubInfoRecord]- null iccId&quot;</span><span class="o">);</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="n">ContentResolver</span> <span class="n">resolver</span> <span class="o">=</span> <span class="n">mContext</span><span class="o">.</span><span class="na">getContentResolver</span><span class="o">();</span>
+        <span class="n">Cursor</span> <span class="n">cursor</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="na">query</span><span class="o">(</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">CONTENT_URI</span><span class="o">,</span>
+                <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">UNIQUE_KEY_SUBSCRIPTION_ID</span><span class="o">,</span>
+                        <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">SIM_SLOT_INDEX</span><span class="o">,</span> <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">NAME_SOURCE</span><span class="o">},</span>
+                <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">ICC_ID</span> <span class="o">+</span> <span class="s">&quot;=?&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="n">iccId</span><span class="o">},</span> <span class="kc">null</span><span class="o">);</span>
+
+        <span class="kt">boolean</span> <span class="n">setDisplayName</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">cursor</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">cursor</span><span class="o">.</span><span class="na">moveToFirst</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">setDisplayName</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                <span class="n">Uri</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">insertEmptySubInfoRecord</span><span class="o">(</span><span class="n">iccId</span><span class="o">,</span> <span class="n">slotIndex</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">DBG</span><span class="o">)</span> <span class="n">logdl</span><span class="o">(</span><span class="s">&quot;[addSubInfoRecord] New record created: &quot;</span> <span class="o">+</span> <span class="n">uri</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="n">ContentValues</span> <span class="n">value</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContentValues</span><span class="o">();</span>
+
+                <span class="k">if</span> <span class="o">(</span><span class="n">slotIndex</span> <span class="o">!=</span> <span class="n">oldSimInfoId</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">value</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">SIM_SLOT_INDEX</span><span class="o">,</span> <span class="n">slotIndex</span><span class="o">);</span>
+                <span class="o">}</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">nameSource</span> <span class="o">!=</span> <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">NAME_SOURCE_USER_INPUT</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">setDisplayName</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">value</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">resolver</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">CONTENT_URI</span><span class="o">,</span> <span class="n">value</span><span class="o">,</span>
+                            <span class="n">SubscriptionManager</span><span class="o">.</span><span class="na">UNIQUE_KEY_SUBSCRIPTION_ID</span> <span class="o">+</span>
+                                    <span class="s">&quot;=&quot;</span> <span class="o">+</span> <span class="n">Long</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">subId</span><span class="o">),</span> <span class="kc">null</span><span class="o">);</span>
+                    <span class="n">refreshCachedActiveSubscriptionInfoList</span><span class="o">();</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="n">sPhones</span><span class="o">[</span><span class="n">slotIndex</span><span class="o">].</span><span class="na">updateDataConnectionTracker</span><span class="o">();</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<ul>
+<li>根据icc_id查询数据库，如果没有查询到就在数据库中插入一条新的记录，如果有相同信息，就进行更新。</li>
+<li>把sim卡名称写入到数据库中，字段display_name</li>
+<li>调用DcTracker.update()</li>
+</ul>
+<p>接下来再返回到<code>updateSubscriptionInfoByIccId</code>，把手机号码加入到数据库，设置默认的数据卡。最后通知注册监听的客户端，并且发送广播<code>ACTION_SUBINFO_CONTENT_CHANGE</code>。</p>
+<div class="hlcode"><pre><span class="n">SubscriptionController</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">notifySubscriptionInfoChanged</span><span class="o">();</span>
+</pre></div>
+
+
+<h3 id="_3">继续更新</h3>
+<p>再次回到<code>handleSimLoaded</code>方法中，接着进行处理。</p>
+<ul>
+<li>设置<code>MccTable</code>的配置，比如语言、时区等</li>
+<li>更新数据库中其他字段，比如手机号码、名字。</li>
+<li>设置网络模式，gsm、cdma、tdscdma、wcdma、lte等</li>
+<li>查询选网模式，自动或者手动，如果不是自动就设置成自动</li>
+<li>更新com.android.phone_preferences.xml中subid</li>
+<li>发送广播<strong>Intent.ACTION_SIM_STATE_CHANGED</strong></li>
+</ul>
+<h2 id="_4">总结</h2>
+<p>这篇主要介绍了SIMRecords中加载完sim卡信息之后，把信息更新到数据库的过程。主要涉及到SubscriptionInfoUpdater、SubscriptionController、SubscriptionManager。</p>
+</div>
+<div id="content-footer">created in <span class="create-date date"> 2018-01-09 14:14 </span></div>
+<div id="comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script type="text/javascript">
+const gitment = new Gitment({
+  id: location.pathname,
+  title: 'Telephony之subscription介绍',
+  owner: 'tracholar',
+  repo: 'wiki',
+  oauth: {
+    client_id: '0cc0476e504b5e70ae7c',
+    client_secret: 'ab98e39ef79469040057eba9c6b2b543b84c72ee',
+  },
+  // ...
+  // For more available options, check out the documentation below
+})
+
+gitment.render('comments')
+// or
+// gitment.render(document.getElementById('comments'))
+// or
+// document.body.appendChild(gitment.render())
+</script>
+
+        </div>
+        <div id="footer">
+            <span>
+                Copyright © 2018 Norris.
+                Powered by <a href="http://simiki.org/" target="_blank">Simiki</a>.
+                Fork me in <a href="https://github.com/daysneco/wiki" target="_blank"> github </a>.
+            </span>
+        </div>
+        
+
+        <script>
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?df74779713027375e7b79302fb72d7b0";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+        </script>
+
+
+        <script src="/wiki/tipuesearch_content.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch_set.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch.min.js"></script>
+    </body>
+</html>

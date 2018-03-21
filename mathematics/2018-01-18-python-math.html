@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/style.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/css/tango.css">
+        <link rel="Stylesheet" type="text/css" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/normalize.css">
+        <link rel="stylesheet" href="/wiki/static/plugin/tipuesearch/css/tipuesearch.css">
+        <link rel="shortcut icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/wiki/favicon.ico" type="image/x-icon">
+        <title>常见的数学公式 - Norris</title>
+        <meta name="keywords" content="technology"/>
+        <meta name="description" content="A wiki website of Norris"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width" />
+        
+        <script type="text/javascript" 
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [['$(',')$'], ['\\(','\\)']]}
+            });
+        </script>
+
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+
+        <script>
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+          ga('create', 'UA-78529611-1', 'auto');
+          ga('send', 'pageview');
+
+        </script>
+    </head>
+
+    <body>
+        <div id="container">
+            
+<div id="header">
+  <div id="post-nav"><a href="/wiki/">Home</a>&nbsp;»&nbsp;<a href="/wiki/#mathematics">mathematics</a>&nbsp;»&nbsp;常见的数学公式</div>
+</div>
+<div class="clearfix"></div>
+<div id="title">常见的数学公式</div>
+<div id="content">
+  <div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#_1">三角函数</a><ul>
+<li><a href="#_2">正弦信号合成方波信号</a></li>
+</ul>
+</li>
+<li><a href="#_3">卷积</a></li>
+<li><a href="#_4">欧拉公式</a></li>
+<li><a href="#_5">傅里叶级数</a><ul>
+<li><a href="#_6">复指数形式的傅里叶级数</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="_1">三角函数</h2>
+<p>$$<br />
+sin^2x + cos^2x = 1\\<br />
+six(x + y) = sinxcosy + conxsiny\\<br />
+cos(x + y) = cosxcosy - sinxsiny\\<br />
+sinx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n+1}}{(2n+1)!} = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + ...\\<br />
+cosx =  \sum_{n=0}^{\infty}\frac{(-1)^{n}x^{2n}}{(2n)!} = 1 - \frac{x^2}{2!} + \frac{x^4}{4!} - \frac{x^6}{6!}  +  ...<br />
+$$</p>
+<h3 id="_2">正弦信号合成方波信号</h3>
+<p>通过python绘制下述正弦信号的波形图：<br />
+$$<br />
+\frac{4sin\theta}{\pi} + \frac{4sin3theta}{3\pi} + \frac{4sin5\theta}{5\pi} + \frac{4sin7\theta}{7\pi} <br />
+$$</p>
+<div class="hlcode"><pre><span class="c"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">z1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">z2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">z3</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">7</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">7</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z3</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+
+<p>结果：</p>
+<p><img alt="" src="/wiki/static/images/2018-01-18-sinx-wave.png" /></p>
+<h2 id="_3">卷积</h2>
+<p><strong>卷积定理</strong>指出，函数卷积的傅里叶变换是函数傅里叶变换的乘积。即一个域中的卷积对应于另一个域中的乘积，例如时域中的卷积对应于频域中的乘积。<br />
+$$<br />
+\int_{ -\infty}^{\infty}f(\tau)(x-\tau)dx<br />
+$$<br />
+使用numpy模块进行卷积运算，通过卷积计算杨辉三角。</p>
+<div class="hlcode"><pre><span class="c"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">xx</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="n">xx</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+
+
+<h2 id="_4">欧拉公式</h2>
+<p>$$<br />
+x = cos\, \omega_0t + jsin\, \omega_0t = e^{j\omega_0t}<br />
+$$</p>
+<p>由欧拉公式可以推出：<br />
+$$<br />
+cos\,wt = \frac{e^{jwt} +e^{-jwt}}{2}\\<br />
+sin\,wt = \frac{e^{jwt}-e^{-jwt}}{2j} = -\frac{j}{2}(e^{jwt}-e^{-jwt})<br />
+$$</p>
+<h2 id="_5">傅里叶级数</h2>
+<p>$$<br />
+f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}_0t + b_ksin\,k{\omega}_0t) \\<br />
+其中：\\<br />
+\omega_0 = \frac{2{\pi}}{2}\\<br />
+a_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)cos\,k{\omega}_0t\,dt (k = 0, 1, 2, ...)\\<br />
+b_k = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f(t)sin\,k{\omega}_0t\,dt (k = 1, 2, ...)<br />
+$$</p>
+<p>周期函数$f(x)​$可以分解为：</p>
+<ul>
+<li>直流分量$(\frac{a_0}{2})$</li>
+<li>余弦分量$(a_kcos\,k\omega_0t)$</li>
+<li>正弦分量$(b_ksin\,k\omega_0t)$</li>
+</ul>
+<h3 id="_6">复指数形式的傅里叶级数</h3>
+<p>$$<br />
+f(t) = \frac{a_0}{2} + \sum_{k=1}^{\infty}(a_kcos\,k{\omega}_{0}t + b_ksin\,k{\omega}_0t)\\<br />
+= \frac{a_0}{2} + \frac{1}{2}\sum_{k=1}^{\infty}(a_k(e^{kj\omega_0t} + e^{-kj\omega_0t}) - jb_k(e^{kj\omega_0t} - e^{-kj\omega_0t}))\\<br />
+= \frac{a_0}{2} + \frac{1}{2}\sum_{k=1}^{\infty}[(a_k-jb_k)e^{kj\omega_0t} + (a_k + jb_k)e^{-kj\omega_0t})]\\<br />
+=\frac{a_0}{2} + \frac{1}{2}\sum_{k=1}^{\infty}[(a_k-jb_k)e^{kj\omega_0t}] + \frac{1}{2}\sum_{k=1}^{\infty} [(a_k + jb_k)e^{-kj\omega_0t})]\\<br />
+= \sum_{k=0}\frac{a_k}{2} + \sum_{k=1}^{\infty}[\frac{1}{2}(a_k - jb_k)e^{kj\omega_0t} + \sum_{k=-1}^{-\infty}[\frac{1}{2}(a_{-k} + jb_{-k})e^{kj\omega_0t}]\\<br />
+= \sum_{-\infty}^{\infty}c_ke^{kj\omega_0t}<br />
+$$</p>
+<p>因此：<br />
+$$<br />
+f(t) = \sum_{-\infty}^{\infty}c_ke^{kj\omega_0t}<br />
+$$<br />
+其中：<br />
+$$<br />
+c_k =<br />
+  \begin{equation}<br />
+  \left{<br />
+             \begin{array}{lr}<br />
+             \frac{a_0}{2}, \quad k = 0  \\<br />
+            \frac{1}{2}(a_k - jb_k), \quad k = 1, 2, ...  \\<br />
+             \frac{1}{2}(a_{-k} + jb_{-k}), \quad k = -1, -2, ... <br />
+             \end{array}<br />
+  \right.<br />
+  \end{equation}<br />
+$$</p>
+</div>
+<div id="content-footer">created in <span class="create-date date"> 2018-01-18 16:47 </span></div>
+<div id="comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script type="text/javascript">
+const gitment = new Gitment({
+  id: location.pathname,
+  title: '常见的数学公式',
+  owner: 'tracholar',
+  repo: 'wiki',
+  oauth: {
+    client_id: '0cc0476e504b5e70ae7c',
+    client_secret: 'ab98e39ef79469040057eba9c6b2b543b84c72ee',
+  },
+  // ...
+  // For more available options, check out the documentation below
+})
+
+gitment.render('comments')
+// or
+// gitment.render(document.getElementById('comments'))
+// or
+// document.body.appendChild(gitment.render())
+</script>
+
+        </div>
+        <div id="footer">
+            <span>
+                Copyright © 2018 Norris.
+                Powered by <a href="http://simiki.org/" target="_blank">Simiki</a>.
+                Fork me in <a href="https://github.com/daysneco/wiki" target="_blank"> github </a>.
+            </span>
+        </div>
+        
+
+        <script>
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?df74779713027375e7b79302fb72d7b0";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+        </script>
+
+
+        <script src="/wiki/tipuesearch_content.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch_set.js"></script>
+        <script src="/wiki/static/plugin/tipuesearch/tipuesearch.min.js"></script>
+    </body>
+</html>
