@@ -173,6 +173,7 @@ SubscriptionController.getInstance().notifySubscriptionInfoChanged();
 - 查询选网模式，自动或者手动，如果不是自动就设置成自动
 - 更新com.android.phone_preferences.xml中subid
 - 发送广播**Intent.ACTION_SIM_STATE_CHANGED**
+- sub_id/subId就是指telephony.db中的_id字段值。
 
 ## 总结
 
